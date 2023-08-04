@@ -1,0 +1,31 @@
+api-version: 2019-12-01
+location: eastus
+name: code-tools-app
+properties:
+  containers:
+  - name: streamlitapp
+    properties:
+      image: amplifystreamlitapps.azurecr.io/code-tools-app:v1
+      ports:
+      - port: 80
+        protocol: TCP
+      - port: 443
+        protocol: TCP
+      resources:
+        requests:
+          cpu: 1.0
+          memoryInGB: 1.5
+  imageRegistryCredentials:
+  - server: amplifystreamlitapps.azurecr.io
+    username: amplifystreamlitapps
+    password: a4WaYSmcqChBoanX8kTQcJywjyYfZehpC+qa7B8evE+ACRCaALOW
+  restartPolicy: OnFailure
+  ipAddress:
+    ports:
+    - port: 443
+      protocol: TCP
+    type: Public
+    dnsNameLabel: code-tools-app
+  osType: Linux
+tags: null
+type: Microsoft.ContainerInstance/containerGroups
