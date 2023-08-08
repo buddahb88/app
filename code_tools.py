@@ -16,7 +16,7 @@ def openai_chat_completion(messages):
         model="gpt-3.5-turbo",
         engine=deployment_name,
         messages=messages,
-        temperature=0.9,
+        temperature=0.3,
         max_tokens=4096,
         top_p=0.95,
         frequency_penalty=0,
@@ -32,11 +32,21 @@ def get_download_link(text, filename, link_text):
 
 def convert_code(source_code, source_lang, target_lang):
     start_phrase = f'''You are an AI assistant specializing in code conversions.
-                       Convert this: {source_code} to {target_lang}
-                       If {target_lang} is Snowflake(Stored Procedure Snowflake SQL)
+                       These are the languages that we will be converting to and from
+                       'Teradata','SQL','Snowflake SQL','Python', 'JavaScript', 'PySpark','Snowpark'
+
+                       Abide by these rules below
+                       1. If {target_lang} is Snowflake SQL
                        be sure to return the converted code as a snowflake stored procedure with the language being SQL
-                       monitor temp tables that begin with # as that is not allowed in Snowflake.  Also, any creation of temp tables
-                       if there is a Drop in the source_code then it should begin with "CREATE OR REPLACE.'''
+                       monitor temp tables that begin with  a "#" and flag those as temporary tables. Otherwise the table creation 
+                       should be treated as a permanent table and should begin with CREATE OR REPLACE TABLE. Also, any creation of temp tables or permanent tables
+                       with DROP TABLE IF EXISTS then the conversion should begin with "CREATE OR REPLACE" as is standard
+                       with Snowflake. 
+                       2.  If the code is too long to return, instruct the user to Shorten the code into smaller chunks for
+                           better conversion results 
+                       3.  After taking the previous rules into consideration, 
+                       Convert the code below from  {source_lang} to {target_lang}
+                       Here is the code to be converted: {source_code}'''
     
     
     st.session_state['last_message'] = {"role": "user", "content": start_phrase}
@@ -100,19 +110,19 @@ def main():
     with tab1:
         st.markdown("<h2 style='text-align: center;'>Code Conversion Tool</h2>", unsafe_allow_html=True)
         st.markdown("<h3 style='text-align: left;'>Source Code:</h3>", unsafe_allow_html=True)
-        source_code = st.text_area("", height=300)
+        source_code = st.text_area("", label_visibility="hidden",height=300)
         col1, col2 = st.columns(2)
         with col1:
-            source_lang = st.selectbox('Select Source Language', options=['Teradata','SQL','Snowflake(Stored Procedure Snowflake SQL)','Snoflake(Snowsight SQL)','Snowflake(Snowsight TempTables)','Snowflake(Snowsight CTE)','Python', 'JavaScript', 'PySpark','Snowpark'])
+            source_lang = st.selectbox('Select Source Language', options=['Teradata','SQL','Snowflake SQL','Python', 'JavaScript', 'PySpark','Snowpark'])
         with col2:
-            target_lang = st.selectbox('Select Target Language', options=['Teradata','SQL','Snowflake(Stored Procedure Snowflake SQL)','Snoflake(Snowsight SQL)','Snowflake(Snowsight TempTables)','Snowflake(Snowsight CTE)','Python', 'JavaScript', 'PySpark','Snowpark'])
+            target_lang = st.selectbox('Select Target Language', options=['Teradata','SQL','Snowflake SQL','Python', 'JavaScript', 'PySpark','Snowpark'])
 
         if st.button("Convert"):
             if source_code:
                 previous_conversion, converted_code = convert_code(source_code, source_lang, target_lang)
                 st.session_state['previous_conversion'] = previous_conversion
                 st.markdown("<h3 style='text-align: left;'>Converted Code:</h3>", unsafe_allow_html=True)
-                st.text_area("",value=converted_code,height=300)
+                st.text_area("",value=converted_code,label_visibility="hidden",height=300)
             else:
                 st.warning('Please enter some source code to convert.')
 
@@ -124,7 +134,7 @@ def main():
         if st.button("Get Code Summary"):
             if source_code:
                 code_summary = provide_summary(source_code)
-                st.text_area("",value=code_summary,height=300,key=3)
+                st.text_area("",value=code_summary,label_visibility="hidden",height=300,key=3)
 
                 if st.download_button("Download Code Summary",data=code_summary,mime='text/plain'):
                     st.success("Code Summary Downloaded!")
