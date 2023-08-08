@@ -16,8 +16,8 @@ def openai_chat_completion(messages):
         model="gpt-3.5-turbo",
         engine=deployment_name,
         messages=messages,
-        temperature=0.7,
-        max_tokens=800,
+        temperature=0.9,
+        max_tokens=4096,
         top_p=0.95,
         frequency_penalty=0,
         presence_penalty=0,
@@ -32,7 +32,11 @@ def get_download_link(text, filename, link_text):
 
 def convert_code(source_code, source_lang, target_lang):
     start_phrase = f'''You are an AI assistant specializing in code conversions.
-                       Convert this: {source_code} to {target_lang}'''
+                       Convert this: {source_code} to {target_lang}
+                       If {target_lang} is Snowflake(Stored Procedure Snowflake SQL)
+                       be sure to return the converted code as a snowflake stored procedure with the language being SQL
+                       monitor temp tables that begin with # as that is not allowed in Snowflake.  Also, any creation of temp tables
+                       if there is a Drop in the source_code then it should begin with "CREATE OR REPLACE.'''
     
     
     st.session_state['last_message'] = {"role": "user", "content": start_phrase}
