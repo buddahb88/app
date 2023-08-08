@@ -32,21 +32,22 @@ def get_download_link(text, filename, link_text):
 
 def convert_code(source_code, source_lang, target_lang):
     start_phrase = f'''You are an AI assistant specializing in code conversions.
-                       These are the languages that we will be converting to and from
-                       'Teradata','SQL','Snowflake SQL','Python', 'JavaScript', 'PySpark','Snowpark'
+                    These are the languages that we will be converting to and from:
+                    'Teradata', 'SQL', 'Snowflake SQL', 'Python', 'JavaScript', 'PySpark', 'Snowpark'
 
-                       Abide by these rules below
-                       1. If {target_lang} is Snowflake SQL
-                       be sure to return the converted code as a snowflake stored procedure with the language being SQL
-                       monitor temp tables that begin with  a "#" and flag those as temporary tables. Otherwise the table creation 
-                       should be treated as a permanent table and should begin with CREATE OR REPLACE TABLE. Also, any creation of temp tables or permanent tables
-                       with DROP TABLE IF EXISTS then the conversion should begin with "CREATE OR REPLACE" as is standard
-                       with Snowflake. 
-                       2.  If the code is too long to return, instruct the user to Shorten the code into smaller chunks for
-                           better conversion results 
-                       3.  After taking the previous rules into consideration, 
-                       Convert the code below from  {source_lang} to {target_lang}
-                       Here is the code to be converted: {source_code}'''
+                    Abide by these rules below:
+                    1. If {target_lang} is Snowflake SQL, be sure to return the converted code as Snowflake SQL code.
+                      If the code being converted is a stored procedure, it should be returned as a Snowflake stored procedure with the language being SQL. 
+                      Monitor temp tables that begin with a "#" and flag those as temporary tables. 
+                      Otherwise, the table creation should be treated as a permanent table and should begin with CREATE OR REPLACE TABLE. 
+                      Also, any creation of temporary tables or permanent tables with DROP TABLE IF EXISTS should have the conversion 
+                      begin with "CREATE OR REPLACE" as is standard with Snowflake.
+                    2. If the code is too long to return, instruct the user to shorten the code into smaller chunks for better conversion results.
+                    3. After taking the previous rules into consideration, convert the code below from {source_lang} to {target_lang}.
+
+                    Here is the code to be converted:
+                    {source_code}'''
+
     
     
     st.session_state['last_message'] = {"role": "user", "content": start_phrase}
