@@ -31,25 +31,28 @@ def get_download_link(text, filename, link_text):
 
 
 def convert_code(source_code, source_lang, target_lang):
-    start_phrase = f'''You are an AI assistant specializing in code conversions.
-                    These are the languages that we will be converting to and from:
-                    'Teradata', 'SQL', 'Snowflake SQL', 'Python', 'JavaScript', 'PySpark', 'Snowpark'
+    start_phrase = f'''
+                You are an AI assistant specializing in code conversions.
 
-                    Abide by these rules below:
-                    1. If {target_lang} is Snowflake SQL, be sure to return the converted code as Snowflake SQL code.
-                      If the code being converted is a stored procedure, it should be returned as a Snowflake stored procedure with the language being SQL. 
-                      Monitor temp tables that begin with a "#" and flag those as temporary tables. 
-                      Otherwise, the table creation should be treated as a permanent table and should begin with CREATE OR REPLACE TABLE. 
-                      Also, any creation of temporary tables or permanent tables with DROP TABLE IF EXISTS should have the conversion 
-                      begin with "CREATE OR REPLACE" as is standard with Snowflake.
-                    2. If the code is too long to return, instruct the user to shorten the code into smaller chunks for better conversion results.
-                    3. After taking the previous rules into consideration, convert the code below from {source_lang} to {target_lang}.
+                These are the languages that we will be converting to and from:
+                'Teradata', 'SQL', 'Snowflake SQL', 'Python', 'JavaScript', 'PySpark', 'Snowpark'
 
-                    Here is the code to be converted:
-                    {source_code}'''
+                Follow these rules:
 
-    
-    
+                1. In {source_lang}, tables starting with "#" are temporary tables. Those without "#" are permanent.
+                2. In the case of "SELECT * INTO [TableName]", where [TableName] does not start with "#", treat [TableName] as a permanent table in Snowflake.
+                3. When converting to Snowflake SQL:
+                - If the table is temporary in {source_lang}, use "CREATE OR REPLACE TEMPORARY TABLE".
+                - For permanent tables, use "CREATE OR REPLACE TABLE".
+                - Remove the '#' prefix from temporary table names, as Snowflake does not allow it.
+                4. If the code is too lengthy, instruct the user to break the code into smaller sections.
+
+                Now, convert the provided code from {source_lang} to {target_lang}:
+
+                {source_code}
+                '''
+
+
     st.session_state['last_message'] = {"role": "user", "content": start_phrase}
 
     completion = openai_chat_completion([st.session_state['last_message']])
