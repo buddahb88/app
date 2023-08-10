@@ -4,26 +4,27 @@ import openai
 import base64
 from PIL import Image
 
+# Initialize OpenAI Setup
+openai.api_key = os.getenv("AZURE_OPENAI_KEY")
+openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT")
+openai.api_type = 'azure'
+openai.api_version = '2023-05-15' 
+
+deployment_name='AI_AmplifyCP_16k'
+
+
 def openai_chat_completion(messages):
-    openai.api_key = os.getenv("AZURE_OPENAI_KEY")
-    openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT")
-    openai.api_type = 'azure'
-    openai.api_version = '2023-05-15' 
-
-    deployment_name='AI_AmplifyCP'
-
-    completion = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+   completion = openai.ChatCompletion.create(
         engine=deployment_name,
         messages=messages,
         temperature=0.3,
-        max_tokens=4096,
+        max_tokens=1500,
         top_p=0.95,
         frequency_penalty=0,
         presence_penalty=0,
         stop=None)
 
-    return completion
+   return completion
 
 def get_download_link(text, filename, link_text):
     b64_text = base64.b64encode(text.encode()).decode()
@@ -31,27 +32,22 @@ def get_download_link(text, filename, link_text):
 
 
 def convert_code(source_code, source_lang, target_lang):
-    start_phrase = f'''
-                You are an AI assistant specializing in code conversions.
+    start_phrase = f"""
+                You are an AI trained by OpenAI, with expertise in code conversion across various languages such as 'Teradata', 'SQL', 'SQL Server', 'Snowflake SQL', 'Python', 'JavaScript', 'PySpark', and 'Snowpark'. 
+                
+                When converting code, particularly from SQL Server to Snowflake SQL, keep these key points in mind:
 
-                These are the languages that we will be converting to and from:
-                'Teradata', 'SQL', 'Snowflake SQL', 'Python', 'JavaScript', 'PySpark', 'Snowpark'
+                1. **Temporary Tables vs. Permanent Tables**:
+                    - If a table in the source_code starts with a # (i.e #TempTable), it's a temporary table. 
+                    - If a table in the source_code doesn't start with a # (i.e. PermTable), it's a permanent table. 
 
-                Follow these rules:
+                2. **Code Length**:
+                    - If the SQL Server code is too long and doesn't fit into a single prompt, ask the user to provide the code in more manageable pieces.
 
-                1. In {source_lang}, tables starting with "#" are temporary tables. Those without "#" are permanent.
-                2. In the case of "SELECT * INTO [TableName]", where [TableName] does not start with "#", treat [TableName] as a permanent table in Snowflake.
-                3. When converting to Snowflake SQL:
-                - If the table is temporary in {source_lang}, use "CREATE OR REPLACE TEMPORARY TABLE".
-                - For permanent tables, use "CREATE OR REPLACE TABLE".
-                - Remove the '#' prefix from temporary table names, as Snowflake does not allow it.
-                4. If the code is too lengthy, instruct the user to break the code into smaller sections.
-
-                Now, convert the provided code from {source_lang} to {target_lang}:
+                With the guidelines above, convert the following code {source_lang} to {target_lang}:
 
                 {source_code}
-                '''
-
+                """
 
     st.session_state['last_message'] = {"role": "user", "content": start_phrase}
 
@@ -117,9 +113,9 @@ def main():
         source_code = st.text_area("", label_visibility="hidden",height=300)
         col1, col2 = st.columns(2)
         with col1:
-            source_lang = st.selectbox('Select Source Language', options=['Teradata','SQL','Snowflake SQL','Python', 'JavaScript', 'PySpark','Snowpark'])
+            source_lang = st.selectbox('Select Source Language', options=['SQL','SQL Server','Snowflake SQL','Python', 'JavaScript', 'PySpark','Snowpark','Teradata'])
         with col2:
-            target_lang = st.selectbox('Select Target Language', options=['Teradata','SQL','Snowflake SQL','Python', 'JavaScript', 'PySpark','Snowpark'])
+            target_lang = st.selectbox('Select Target Language', options=['SQL','SQL Server','Snowflake SQL','Python', 'JavaScript', 'PySpark','Snowpark','Teradata'])
 
         if st.button("Convert"):
             if source_code:
